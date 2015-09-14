@@ -1,0 +1,77 @@
+/**
+\page prerequisites Framework prerequisites
+
+\section minreq Minimum requirements
+
+\subsection os Currently supported operating systems
+
+The framework is extensively tested on Ubuntu 12.04 LTS but will probably
+run the on most Linux based systems.
+
+Windows is currently NOT supported, but porting it to Windows should be
+straight forward. These source files are system-dependent and thus,
+would be affected:
+
+ - <var>communication/serialconnection.cc</var>,
+ - <var>communication/communicator.cc</var> and
+ - <var>utils/os/*.*</var>
+
+\subsection permissions Permissions for accessing usb devices
+
+An easyFPGA board connected via USB will appear as a ttyUSB device. For
+getting permissions to access the device add your user to the dialout
+group as follows:
+
+\code
+    $ sudo usermod -aG dialout USERNAME
+\endcode
+
+Note: This will take effect only after logging off and on again or
+rebooting your system.
+
+\subsection software Required programs and packets
+
+<dl>
+    <dt>Doxygen</dt>
+    <dd>For generating this documentation.</dd>
+
+    <dt>Make</dt>
+    <dd>For a maximum of usability and maintainability, the build process
+    of the framework was made as transparent as possible.
+
+    To build the framework, please use the Makefile within the git
+    repository, see \ref buildframework for further details.
+
+    For a simple translation process of your own project sources it makes
+    sense to create a project specific Makefile (the repository-contained
+    Makefile only compiles the framwork). Because Makefiles are highly
+    complex and difficult to understand for beginners we deliver an
+    possible layout of a project specific Makefile in this documentation.
+    See section \ref step3.</dd>
+
+    <dt>GNU C++ compiler (g++ 4.6.3)</dt>
+    <dd>To compile and link the source files.</dd>
+
+    <dt>XILINX ISE Toolchain (Version 14.7)</dt>
+    <dd>To generate binary files for the easyFPGA board, the Xilinx toolchain
+    is required.
+    It is included in the ISE WebPACK which is free of charge after registration.
+    The SDK is tested to work with Version 14.7.
+
+    It is not necessary to install the Xilinx cable drivers!
+
+    Download: http://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/design-tools.html</dd>
+</dl>
+
+\section recommendedreq Recommended development tools
+
+If you want to add features to the framework (e.g. a new easyCore) it is
+recommended to install the following tools. These are already built-in
+in the Makefile.
+
+<dl>
+    <dt>cppcheck</dt>
+    <dd>Static C++ code analysis tool for finding some programming errors
+    which are not detected by the compiler.</dd>
+</dl>
+*/

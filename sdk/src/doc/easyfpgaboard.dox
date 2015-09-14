@@ -1,0 +1,122 @@
+/**
+\page hardware Connectivity and usage of the easyFPGA board
+
+Here, the auxiliary connectors and locations of GPIO pins of the
+easyFPGA board will be described.
+
+\section hardware_connectors Connectors
+
+\image html board_connectors.png "Board connector overview"
+
+\section hardware_gpiopins GPIO Pins
+
+The board provides 72 GPIO pins that can be accessed over 3 26-pin
+headers. Each header (called bank) has 24 GPIO pins plus two power pins.
+
+The single banks are in the range of 0 to 2 and the pins are in the
+range of 0 to 23. The GPIO pins follow the LVTTL (3.3 V) standard and
+are limited to drive a current of 2 mA. The 5 V power pins are directly
+connected to the voltage delivered by the USB or barrel jack. Thus, the
+maximum current output here depends on the USB host or external power
+supply. For your guidance, note the little dot next to the GND pin.
+
+\section hardware_leds LEDs
+
+There are two LEDs:
+- The red one indicates that the board is connected to a power supply.
+- The green LED flashes while the FPGA gets configured and is constantly
+  on, when a host established a USB connection to the FPGA.
+
+\section hardware_jtag FPGA JTAG
+
+For programming and debugging the FPGA using the JTAG interface, connect
+a Xilinx (or compatible) JTAG adapter to the designated through-hole
+pads.
+
+\section hardware_usb_shield USB shield
+
+In some cases it might be useful to be able to connect the USB shield to
+a metal housing. For this purpose use the hole next to the USB socket.
+
+\section hardware_pdi MCU PDI
+
+The microcontroller (an Atmel atxmega128a4u) can be programmed using the
+PDI interface. For an easier and faster approach see next section
+\ref hardware_update_uc.
+
+\section hardware_update_uc Updating the microcontroller
+
+This section decribes how to update the microcontroller's firmware.
+
+Note 1: In order to ensure safe operation and avoid any damage of the
+hardware, we recommend to only use the MCU firmware that has been
+officially released by os-cillation GmbH! If you order an easyFGPA board,
+the latest firmware is already installed. So, in normal use it won't be
+not neccessary to update the firmware manually.
+
+Note 2: At the moment, the latest firmware version is not available on
+the internet. If you have any problems feel free writing an e-mail to:
+support@os-cillation.de
+
+<b>Prerequisites</b>
+
+For programming the MCU (which is an Atmel atxmega128a4u) you will need
+a version of avrdude that supports this device (>= 6.0.1.). Most
+probably you will have to build avrdude, the sources can be downloaded
+from the avrdude project page
+http://savannah.nongnu.org/projects/avrdude.
+
+<b>The recommended way</b>
+
+The easiest way of loading new firmware to the MCU uses the the installed
+application to enter the bootloader:
+
+-# Make sure the FPGA is inactive (green LED is off). Maybe you have to
+   unplug and reconnect the USB cable (without an external power supply
+   attached).
+-# Send the byte 0xEB to the board to enter the bootloader.
+-# Use avrdude to upload a new firmware.
+   <br>Note: Avrdude needs to be started immediately(!) after sending the
+   0xEB byte.
+
+It is most convenient to use the following script:
+
+\code
+
+#!/bin/sh
+# easyFPGA microcontroller update script
+
+if [ "$#" -ne 2 ]; then
+    echo "usage: $0 <hexfile> <device>" >&2
+    exit 1
+fi
+
+HEXFILE=$1
+TTYUSB=$2
+
+echo -en '\xEB' > $TTYUSB
+avrdude -p atxmega128a4u -c avr109 -P $TTYUSB -e -U flash:w:$HEXFILE
+
+\endcode
+
+<b>Fallback 1: Enter the bootloader manually</b>
+
+This is for the case you have modified and updated the firmware in a way
+that it does not recognize the enter bootloader command (0xEB) anymore.
+You can force the board to enter the bootloader during startup by
+connecting GND to a solder joint of the power LED.
+
+-# Disconnect any power supply
+-# Use a wire or probe to temporarily connect GND to the solder joint
+   marked with "boot" (see picture)
+-# Connect USB to power up the board. You can now remove the ground wire
+   from the LED. After this, both LEDs should be off.
+-# Use avrdude to upload the new firmware as shown above
+
+<b>Fallback 2: Use PDI</b>
+
+In the rare case that nothing else works anymore, the MCU can still be
+programmed using the PDI interface. For this, a compatible programmer
+like AVRISP mkII or JTAGICE mkII is required.
+
+*/

@@ -1,0 +1,320 @@
+/**
+\page creatingaproject Creating a new project
+
+Projects using the easyFPGA framework always consists of at least two
+parts:
+ - defining the FPGA structure and
+ - implementing the host application.
+
+At compile time, the FPGA definition class will be converted into VHDL
+and then fed into the XILINX toolchain to generate an FPGA binary. In
+the \c defineStructure() method of this class the easyCores have to be
+instantiated and connected. In order to use these cores at run time,
+this class should offer easyCore getter methods.
+
+At run time, the host application communicates with the easyFPGA board
+via USB. From the FPGA definition class it obtains references to the
+easyCores in order to call their API methods.
+
+\section step0 Step 0: Before you start
+
+-# Make sure, that all prerequisites of \ref software are satisfied.
+-# Make sure, you've installed the SDK on your host system. This is
+   explained in \ref buildframework.
+-# Create a project dir.
+-# Change into the created dir.
+-# Create empty files:
+  - Makefile (for the project build; see below)
+  - pwm_fpga.h (the interface of the FPGA's structure description class)
+  - pwm_fpga.cc (the implementation of the FPGA's structure description class)
+  - host_application.cc (your actual application)
+
+Now, you are ready to start. The following steps will guide you through
+an example project by describing some project templates.
+
+\section step1 Step 1: Define the FPGA's structure
+
+Here is an possible template for the FPGA description class interface
+file. The comments speak for itself:
+
+\code
+// pwm_fpga.h
+
+#ifndef MYPROJECT_PWM_FPGA_H_
+#define MYPROJECT_PWM_FPGA_H_
+
+#include "easyfpga/easyfpga.h"
+#include "easyfpga/easycores/pwm/pwm8_ptr.h"
+
+/* FPGA description template for the user application */
+class PwmFpga : public EasyFpga
+{
+    public:
+        // easyCores will be instantiated in the constructor
+        PwmFpga();
+        ~PwmFpga();
+
+        // here, the easyCores will be added and connected
+        void defineStructure(void);
+
+        // the easyCore getter method to be called in the host application
+        pwm8_ptr getPwm8(void);
+
+    private:
+        pwm8_ptr _pwm8;
+};
+
+/* This macro is neccessary for the binary generation process. Please
+make sure, that the macro's parameter has the same value as the name of
+this binary description class (here: PwmFpga). */
+EASY_FPGA_DESCRIPTION_CLASS(PwmFpga)
+
+#endif  // MYPROJECT_PWM_FPGA_H_
+\endcode
+
+Here is an example for the FPGA description class implementation. The
+comments speak for itself:
+
+\code
+// pwm_fpga.cc
+
+#include "pwm_fpga.h"
+#include "easyfpga/easycores/pwm/pwm8.h"
+
+PwmFpga::PwmFpga() :
+    _pwm8(std::make_shared<Pwm8>())
+{
+}
+
+PwmFpga::~PwmFpga()
+{
+}
+
+void PwmFpga::defineStructure(void)
+{
+    // prior to connecting an easyCore it has to be added
+    this->addEasyCore(_pwm8);
+
+    // connect to an external pin
+    this->connect(_pwm8, Pwm8::PIN::PWM_OUT, GPIOPIN::BANK0_PIN0);
+}
+
+pwm8_ptr PwmFpga::getPwm8(void)
+{
+    return _pwm8;
+}
+\endcode
+
+Note 1: It's important, that the file's name, which defines a class
+description and containing the EASY_FPGA_DESCRIPTION_CLASS macro, ends
+with '.cc' or '.h'. (The framework will process only these files.)
+
+Note 2: Of course you can design the FPGA's description class interface
+and write its implementation in one file! Splitting it into two files is
+considered best practice but not mandatory.
+
+Note 3: Further examples can be found in the <var>test</var> directories
+which are located besides the easyCore sources or in this documentation.
+
+\section step2 Step 2: Implement the host application
+
+Here is an example for your application implementation. The comments
+speak for itself:
+
+\code
+// host_application.cc
+
+#include "pwm_fpga.h"
+
+#include "easyfpga/easycores/pwm/pwm8.h"
+#include "easyfpga/easycores/pwm/pwm8_ptr.h"
+
+#include <memory> // for shared pointers
+
+int main(int argc, char** argv)
+{
+    // Initialize the FPGA with the init() member. That does:
+    // 1) Checks if the specified binary exists or tries to create it.
+    // 2) Connect to an easyFPGA board specified by a serial number,
+    //    here 0, which will connects the framework to first easyFPGA
+    //    board found.
+    // 3) Uploads the generated binary and configure it into the FPGA's
+    //    RAM if this isn't already done before with this binary.
+    std::shared_ptr<PwmFpga> fpga = std::make_shared<PwmFpga>();
+    fpga->init(0, "PwmFpga.bin");
+
+    // Gets an easyCore instance from the description class
+    pwm8_ptr pwm = fpga->getPwm8();
+
+    // Start communication by using the respective core API.
+    pwm->setDutyCycle(0x32);
+
+    return 0;
+}
+
+\endcode
+
+\section step3 Step 3: Build your project files
+
+For a simple introduction, even for inexperienced users, this
+documentation contains a Makefile template for your own projects.
+With this you can:
+
+- Build a runnable \c host_application to be executed on your host system.
+<br>This will compile and link your own project implementations (.h, .cc
+files) together with the easyFFPGA library.
+\code
+    $ make build
+\endcode
+
+- Build an FPGA binary to be uploaded to the easyFPGA board (or more
+  precise: all possible binaries to them a description was found in this
+  directory).
+  <br>The upload of the binary will happen at runtime of your host
+  application (take a look at EasyFpga::init() for more information).
+\code
+    $ make generate_binaries
+\endcode
+
+- clean up your project directory (removes all auto-generated files)
+\code
+    $ make clean
+\endcode
+
+Now, copy the following Makefile into the empty Makefile created before:
+
+\code
+# Makefile
+
+TARGET_APPLICATION = host_application
+FPGA_BINARIES = PwmFpga.bin
+ADDITIONAL_HEADERS = pwm_fpga.h
+ADDITIONAL_SOURCES = pwm_fpga.cc
+
+
+
+MSG_DONE = make: *** SUCCESS
+
+MSG_COMPILING = make: *** compile ...
+MSG_LINKING = make: *** link ...
+MSG_BUILD_DONE = make: *** BUILD SUCCESS
+
+MSG_FPGA_BINARY_GENERATION_START = make: *** START FPGA BINARY GENERATION PROCESS
+MSG_FPGA_BINARY_GENERATION = make: *** GENERATE BINARY FROM FILE ...
+MSG_FPGA_BINARY_DONE = make: *** FPGA BINARY GENERATION PROCESS SUCCESSFUL
+
+MSG_CLEAN_DONE = make: *** CLEAN WHOLE PROJECT SUCCESS
+MSG_CLEAN_BUILD_DONE = make: *** CLEAN BUILD FILES SUCCESS
+MSG_CLEAN_HDL_FILES_DONE = make: *** CLEAN HDL FILES SUCCESS
+MSG_CLEAN_CONFIG_DONE = make: *** CLEAN PROJECT CONFIGURATION SUCCESS
+
+CC = g++
+
+CC_FLAGS += -std=c++0x
+CC_FLAGS += -I /usr/local/include/easyfpga/
+CC_FLAGS += -c
+
+CC_FLAGS_BINARY_GENRATION += -DBINARY_GENERATION_PROCESS
+
+LD_FLAGS += -lEasyFpga
+LD_FLAGS += -lrt
+
+
+
+.PHONY: default clean clean_build clean_hdl_files clean_config
+
+# default make target:
+# 1. build the main application defined by TARGET_APPLICATION
+# 2. generate all described FPGA binaries in this directory
+default: build generate_binaries
+    $(info )
+    $(info $(MSG_DONE))
+
+# builds the main application (file name defined by TARGET_APPLICATION)
+build: $(TARGET_APPLICATION)
+    $(info )
+    $(info $(MSG_BUILD_DONE))
+
+# links all objects together
+ADDITIONAL_OBJECTS = $(ADDITIONAL_SOURCES:%.cc=%.o)
+$(TARGET_APPLICATION): %: %.o $(ADDITIONAL_OBJECTS) $(ADDITIONAL_HEADERS)
+    $(info $(MSG_LINKING) $@)
+    @$(CC) $< $(ADDITIONAL_OBJECTS) -o $@ $(LD_FLAGS)
+
+# compiles all sources
+%.o: %.cc
+    $(info $(MSG_COMPILING) $@)
+    @$(CC) $(CC_FLAGS) $< -o $@
+
+generate_binaries: $(FPGA_BINARIES)
+    $(info )
+    $(info $(MSG_FPGA_BINARY_DONE))
+
+DESCRIPTION_FILES = $(shell grep EASY_FPGA_DESCRIPTION_CLASS * --exclude=Makefile | cut -d ':' -f 1)
+$(FPGA_BINARIES): %:
+    $(info )
+    $(info $(MSG_FPGA_BINARY_GENERATION_START))
+    $(foreach binary_description, $(DESCRIPTION_FILES), \
+        $(info ) \
+        $(info $(MSG_FPGA_BINARY_GENERATION) $(binary_description)) \
+        $(CC) $(CC_FLAGS) $(binary_description:%.h=%.cc) -o binarygenerator.o $(CC_FLAGS_BINARY_GENRATION) && \
+        $(CC) binarygenerator.o -o binarygenerator $(LD_FLAGS) && \
+        ./binarygenerator . && \
+        rm -f binarygenerator binarygenerator.o \
+    )
+
+# removes all generated files
+clean: clean_build clean_hdl_files clean_config
+    $(info )
+    $(info $(MSG_CLEAN_DONE))
+    @rm -f $(TARGET_APPLICATION) $(FPGA_BINARIES)
+
+# removes all build files
+clean_build:
+    $(info )
+    $(info $(MSG_CLEAN_BUILD_DONE))
+    @rm -f $(TARGET_APPLICATION).o $(ADDITIONAL_OBJECTS)
+
+# removes all toolchain generated files
+clean_hdl_files:
+    $(info )
+    $(info $(MSG_CLEAN_HDL_FILES_DONE))
+    @rm -rf _xmsgs xst xlnx_* *.log *.bin *.vhd *.bgn *.bld *.drc \
+        *.ncd *.ngd *.pad *.par *.pcf *.ptwx *.unroutes *.xpi *.map \
+        *.html *.xrpt *.xwbt *.txt *.csv *.ngm *.xml *.mrp *.ngc \
+        *.bit *.lst *.srp *.lso webtalk.log binarygenerator \
+        binarygenerator.o xst-project xst-script
+
+# removes file project.conf
+clean_config:
+    $(info )
+    $(info $(MSG_CLEAN_CONFIG_DONE))
+    @rm -f project.conf
+
+\endcode
+
+After that you only have to do make within your project directory:
+
+\code
+    $ make
+\endcode
+
+This will build your own project sources \b and generate a FPGA binary
+for you.
+
+Note: If you use some more source files you want to include into your
+host application, add them to \c ADDITIONAL_HEADERS or
+\c ADDITIONAL_SOURCES.
+
+\section step4 Step 4: Execute your project
+
+Finally, execute the built application if no errors happened in
+\ref step3.
+
+\code
+    $ ./host_application
+\endcode
+
+Have fun! ;-)
+
+*/

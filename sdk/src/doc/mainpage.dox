@@ -1,0 +1,86 @@
+/**
+\mainpage The easyFPGA toolkit and its documentation
+
+You want to take advantage of configurable hardware and avoid the effort
+of becoming acquainted with hardware description languages? Then easyFPGA
+is exactly what you are looking for! It will highly simplify your way to
+success with FPGA applications...
+
+\section easyfpga What is the easyFPGA toolkit?
+
+The "easyFPGA toolkit" is an open source project consisting of:
+- an easyFPGA board and
+- an C++-SDK (called framework).
+
+The easyFPGA framework allows you accessing different hardware components
+within your C++ applications and is currenty meant to be used in
+conjunction with the easyFPGA board. The SDK is licensed as open source
+and can be arbitrarily modified for an non-commercial use, why it can be
+freely customized to run with self-selected hardware. Only if you intend
+to use it commercially, please request for an alternative license model
+with the contact form can be found on http://easyfpga.de.
+
+\section features The framework's features
+
+The main feature of the framework is the usage of predefined hardware
+components (called easyCores) or combinations of them in your C++
+application. It can instantiates these easyCores into an FPGA of an
+connected easyFPGA board and communicates with these at runtime. That
+all happens only by implementing in C++ without any knowlegde of hardware
+description languages.
+
+The framework generates VHDL with the gained information of your FPGA
+definition classes and passes it along to the synthesis tools. Once the
+easyFPGA board is configured with a generated binary, the included
+easyCores can be accessed from any C++ application by means of the USB
+interface.
+
+Currently instantiatable are following easyCores:
+
+- FrequencyDivider for dividing a clock signal,
+- Gpio8 giving access to 8 general purpose I/O pins per core,
+- Pwm8 (8 bit counter width),
+- Pwm16 (16 bit counter width),
+- a Uart interface,
+- an Spi master interface, and
+- an I2C Master core for managing a %I2C bus system or
+- a Can controller core.
+
+The number of usable hardware components is primarily limited by the
+number of GPIO pins available on the easyFPGA board.
+
+\section start Getting Started
+
+\ref prerequisites
+
+\ref buildframework
+
+\ref creatingaproject
+
+\ref programming
+
+\ref describing_fpgas
+
+\ref configfileusage
+
+For a detailed description how to use a certain easyCore take a look to
+the respective class description.
+
+\section board The easyFPGA board
+
+For getting an out-of-the-box solution to work with, you can order an
+easyFPGA board at http://easyfpga.de and use it in conjunction with the
+framework.
+
+\image html board.jpg "The easyFPGA board"
+
+The board's key features are these:
+- Micro-USB socket
+- 5 V Voltage supply using 2.5 mm barrel jack or USB
+- Dimensions 70 x 50 mm, M3 mounting holes
+- 72 GPIO pins, 3.3 V, 2 mA
+- JTAG interface
+
+\ref hardware
+
+*/

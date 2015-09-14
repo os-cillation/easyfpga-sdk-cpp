@@ -1,0 +1,95 @@
+/**
+\page configfileusage Usage of the configuration file
+
+The configuration file \a project.conf will be automatically created the
+first time you execute an easyFPGA compiled program or you tries to
+build a FPGA binary.
+
+Note: Thus, if you use other install paths than the default ones, your
+first compilation / execution may fail. Thereafter you can set them and
+retry.
+
+By default, \a project.conf is located in the correspondig working
+directory of your current easyFPGA project. Thus, each project has its
+own one.
+
+If it is intended to use one global configuration for all of your
+projects, you can define the macro \a USE_ONE_GLOBAL_CONFIGFILE in
+configuration.h. Note: Changing this behavior requires a re-build of the
+easyFPGA library.
+
+You can adjust the following features:
+- Adapt the used install paths on your host system if you changed these
+  in the SDK's Makefile.
+- Set some communication layer features:
+  - How often a single hardware exchange will be retried if errors occur.
+  - If the framework should run in a synchronous or an asynchronous
+    operation mode.
+- Logging
+  - Whether the log should be printed to the terminal or to a file.
+  - Which type of messages will be printed.
+
+
+
+A standard configuration file looks like:
+
+\code
+# easyFPGA PROJECT CONFIGURATION FILE
+
+
+# VHDL BINARY GENERATION
+# Path to the SOC repository
+SOC_DIRECTORY=/usr/local/share/easyfpga/soc
+
+
+# Location of the shared library
+LIBRARY_DIRECTORY=/usr/local/lib
+
+
+# Location of the header files
+HEADER_DIRECTORY=/usr/local/include/easyfpga
+
+
+# Location of the template files
+TEMPLATES_DIRECTORY=/usr/local/share/easyfpga/templates
+
+
+# SETTINGS FOR FINDING AN EASYFGPA BOARD
+# Location of the system devices in the filesystem.
+# Value: /an/absolute/path/to/a/directory/
+USB_DEVICE_PATH=/dev/
+# Special name pattern to find an device in the directory of USB_DEVICE_PATH
+USB_DEVICE_IDENTIFIER=ttyUSB
+
+
+# COMMUNICATION SETTINGS
+# The maximum permissible number of retries for one operation (if e.g.
+# errors or timeouts occurs).
+# Values between 0 and 255 are possible.
+MAX_RETRIES_ALLOWED=3
+# Decide whether to use a synchronous or asynchronous operation mode.
+# Values of set {sync, async} are possible.
+FRAMEWORK_OPERATION_MODE=sync
+
+
+# LOGGING SETTINGS
+# Sets the output target for the log.
+# Possible values:
+# - STDOUT: for the terminal
+# - /absolute/path/to/a/file
+LOG_OUTPUT_TARGET=STDOUT
+# Defines from which level the log messages appears. The larger the log
+# level the less messages will appear but they are the more important ones.
+# For a productive use of the framework should be used 1.
+# Possible values:
+# - 0: all messages including debug messages
+# - 1: all messages excluding debug messages
+# - 2: all warnings and errors
+# - 3: only errors
+MIN_LOG_LEVEL_OUTPUT=0
+\endcode
+
+The comments right before the settings giving information about what is
+possible to set.
+
+*/

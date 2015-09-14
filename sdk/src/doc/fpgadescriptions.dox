@@ -1,0 +1,41 @@
+/**
+\page describing_fpgas How to describe the FPGA's internal structure
+
+An FPGA can be only described within .h and .cc files, because the
+generator will only process these files.
+
+Procedure:
+-# Design an interface to your FPGA description class (.h) and let this
+   class inherit from EasyFpga.
+-# Add the \c EASY_FPGA_DESCRIPTION_CLASS(FpgaName) macro to the end of
+   your header file.
+   <br>Please replace \c FpgaName with the correct name of your FPGA
+   description class.
+-# Implement the abstract method EasyFpga::defineStructure() derived
+   from EasyFpga and add some getters for accessing the used easyCores
+   in your host application.
+   <br>Please note the connect constraints from below!
+
+Note: The EasyFpga::connect() method is directional.
+
+At compile time, when building your host application, the Makefile try
+to generate your desired binary.
+
+\code
+    $ make
+\endcode
+
+The built binary will then be uploaded to the easyFPGA board at runtime
+of your host application. See EasyFpga::init() for more information.
+
+\section connectconstraints Connect constraints
+
+- Every sink pin can be left unconnected or connected to exactly one
+  source, not more.
+- Every source pin can be connected to an unlimited numer of sinks.
+- Changing from sink (input) to source (output) and vice-versa is not
+  allowed for FPGA-internal connections.
+  <br>Thus, for example, the pins GPIO0..7 of the Gpio8 core can be only
+  connected to any GPIO pins of the easyFPGA board (EasyFpga::GPIOPIN).
+
+*/

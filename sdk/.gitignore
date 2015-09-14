@@ -1,0 +1,18 @@
+# output directories
+/doc/
+/bin/
+/lib/
+/testoutput/
+
+# ignore testcase generated files
+src/*/*/test/*/*.vhd
+src/*/*/test/*/*.bin
+src/*/*/test/*/*.log
+
+src/*/*/test/*.vhd
+src/*/*/test/*.bin
+src/*/*/test/*.log
+
+src/*/test/*.vhd
+src/*/test/*.bin
+src/*/test/*.log

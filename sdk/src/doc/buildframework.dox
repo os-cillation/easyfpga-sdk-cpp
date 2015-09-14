@@ -1,0 +1,124 @@
+/**
+\page buildframework How to install the framework
+
+\section buildframeworkproductive For a productive SDK usage
+
+1. Open a terminal
+
+2. Clone the easyFPGA-CPP repository from github and change into the sdk
+directory, if you don't done this before.
+
+\code
+    $ cd ~/repositories
+    $ git clone --recursive https://github.com/os-cillation/easyfpga-sdk-cpp.git
+    $ cd easyfpga-sdk-cpp/sdk
+\endcode
+
+3. Install the framework and re-create the documentation (because
+\c make \c clean deletes it).
+
+\code
+    $ make clean install doc
+\endcode
+
+If you see an "make: *** CREATE DOCUMENTATION SUCCESS" in the last output
+line, step 3 was successful.
+
+Maybe you need root privileges to install the library. Please execute in
+that case:
+
+\code
+    $ sudo !!
+\endcode
+
+After step 3 there will be some auto-generated files in the following
+directories. The most important are:
+- The file <var>/usr/local/lib/libEasyFpga.so</var>: the shared library
+  that you have link together with your project sources with the
+  compiler option \c -lEasyFpga.
+- The directory <var>/usr/local/include/easyfpga</var> contains the
+  whole easyFPGA API which can be included in your easyFPGA project.
+  <br>Please note, that <var>/usr/local/include</var> is usually in the
+  c/c++ compiler search path for include files. Thus, for including any
+  easyFPGA features in your application it's enough to include these by
+  \c "#include easyfgpa/<any header file>".
+
+Note: You can modify the <var>INSTALL_DIR_*</var> variables of the
+Makefile to configure where to put the installed library and headers on
+your filesystem. (But to avoid search path errors we recommend not to do
+that.)
+
+Now you should be able to build your easyFPGA projects. ;-)
+
+\section uninstallframework Uninstalling the framework
+
+Please type into the terminal
+
+\code
+    $ make uninstall
+\endcode
+
+for deleting all auto-generated easyFPGA files. (You have to delete the
+easyFPGA repository manually.)
+
+Note: This have to be executed in the <var>sdk</var> subdirectory of
+your cloned easyFPGA repository.
+
+\section buildframeworkdevelpment For a development SDK usage
+
+For developing a new feature, please make sure you've installed the
+\ref recommendedreq.
+
+<b>Library / Test case build</b>
+
+Executing
+
+\code
+    $ make all
+\endcode
+
+will do a completely rebuild of the whole repository by
+-# cleaning the whole easyfpga-cpp-sdk respository,
+-# checking the complete source tree with a static code analysis tool,
+-# re-building <var>libEasyFpga.so</var>,
+-# re-installing the rebuilt library,
+-# re-building all test cases, and
+-# creating this doxygen documentation.
+
+In many cases you don't want to rebuild the whole project. Therefore you
+can execute each step from above separately:
+
+\code
+    $ make clean
+    $ make checksources
+    $ make buildlib
+    $ make install
+    $ make buildtestcases
+    $ make doc
+\endcode
+
+The default make target ist set to do \c checksources , \c install and
+\c buildtestcases.
+
+<b>Testing</b>
+
+If you want to execute some delivered test cases, type:
+
+\code
+    $ make runtest TESTCASE=bin/easycores/spi/test/eeprom_read_write/SpiEepromTest
+\endcode
+
+If you want to execute all implemented test cases with checking that no
+testcase fails, type:
+
+\code
+    $ make test
+\endcode
+
+Please note: Some test cases require a special hardware configuration
+connected to the GPIO pins of the easyFPGA board. Thus, if you don't
+restore the same hardware configuration, lots of test cases may fail.
+Please take a look to the respective test case documentation for more
+information.
+
+*/

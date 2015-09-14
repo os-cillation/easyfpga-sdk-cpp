@@ -1,0 +1,129 @@
+/**
+\page programming The framework's programming style
+
+The programming style with the framework is similar to an event loop.
+
+The framework runs in two different operation modes, either in
+- a synchronous mode or
+- an asynchronous mode.
+
+These modes can be configured with the option \c FRAMEWORK_OPERATION_MODE
+of the configuration file \a project.conf, see \ref configfileusage for
+more information.
+
+All SDK methods will return a value of type \c bool:
+- The return values are used for returning status information about the
+  operation to be executed (if successful processed or not.)
+- Because off the first fact, you have to get the all other desired
+  information over pointer passed to the function parameters.
+  <br>Note: If you declear a variable in your user program, don't forget
+  to initialize your variable before creating a pointer! ;-)
+- Please check these return values everytime to make sure not to
+  overlook some errors.
+- Depending on the current framework mode, these return values will have
+  a different meaning. (See below.)
+
+\section programming_sync Synchronous mode
+
+The synchronous mode works like sequential programming and step by step.
+
+When one API method returns, everything is processed:
+- send the operation(s) to be executed,
+- modify the FPGA's status,
+- receiving all status codes, and
+- write back all results to the user's application.
+
+If all single steps of the desired API method could be executed
+successfully, the return value equals to \c true.
+
+For recognizing sent interrupts from the easyFPGA board to the host and
+executing your defined interrupt service routines (ISR), you have to
+call:
+
+\code
+EasyFpga::handleReplies()
+\endcode
+
+Thus, at runtime, in the most cases you might to setup your used
+easyCores and let go the main application to an endless loop (for an
+cyclic check if new interrupts available) and do the rest in your ISRs.
+
+\code
+while (1)
+{
+    EasyFpga::handleReplies();
+    usleep(1);
+}
+\endcode
+
+Note: Polling isn't really graceful. This TODO for the next releases was
+noticed. ;-)
+
+\section programming_async Asynchronous mode
+
+To program an application for an asynchronous working framework is much
+more complicated compared to the synchronous way. As you'll see, the
+asynchronous mode behaves very different compared to the synchronous one.
+
+The main difference is that, the framework not waits for some replies
+after sending a request. This behaviour will largely increase the
+communication speed to the easyFPGA board, but the user have to thinking
+more about what he's programming.
+
+For re-synchronizing the FPGA's status with the program flow it's
+neccessary to call:
+
+\code
+EasyFpga::handleReplies()
+\endcode
+
+For example: If the user want to access a register value, he have to:
+-# Declear and initialize a byte variable for example.
+\code
+byte desiredValue = 0x00;
+\endcode
+-# Call a core's API method and pass a pointer to it.
+\code
+core->getValue(&desiredValue);
+\endcode
+-# Do some other stuff.
+-# Call EasyFpga::handleReplies().
+-# Do something with \c desiredValue.
+
+Important is that fact, that the user have to call
+EasyFpga::handleReplies() first before he access his decleared variable
+\c desiredValue. Only \c handleReplies() will fetch the board's reply
+from the receive buffer and write this reply back into the user's
+defined memory over the given pointer. Without calling \c handleReplies(),
+\c desiredValue will have always assigned the initial value although the
+function \c getValue() was called long before.
+
+On the other side, e.g. if intending to execute a write operation, the
+user can be only sure that the desired value was written to the easyFPGA
+board, if he executed EasyFpga::handleReplies(). The reason is that some
+operation are depending each other: an operation can't be started until
+another operation was successfully executed. Thus, it will happen that
+some operations will be retained and only be sequentially executed by
+calling EasyFpga::handleReplies().
+
+Note: Calling EasyFpga::handleReplies() after each easyCore method does
+have the same effect if the framework would run in synchronous mode.
+
+With respect to interrupts, the are no peculiarities compared to the
+synchronous mode.
+
+Note: Thus, if the easyFPGA library has any unexpected behaviour in the
+asynchronous operation mode, there might be some bugs in the execution
+environment of the asynchronous tasks. Reason: In some cases it's highly
+difficult to resolve all dependencies between the executed exchanges.
+For example, typical dependencies are:
+- Register access after write operations: If the user starts a write
+operation to a register, all other operations on the same register have
+to be retained until the write was successful.
+- Or more difficult are timing issues of some hardware units which results
+from finite queue sizes.
+
+If you have some unexpected behaviour, please test your application
+within a synchronous operation mode.
+
+*/
